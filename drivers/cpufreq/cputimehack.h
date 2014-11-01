@@ -5,4 +5,8 @@ static inline u64 cputime64_sub(u64 a, u64 b){
 	return a - b;
 }
 
+static inline u64 cputime64_add(u64 a, u64 b){
+	return a + b;
+}
+
 #endif
