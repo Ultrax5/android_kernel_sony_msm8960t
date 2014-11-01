@@ -33,6 +33,9 @@
 #include <linux/kernel_stat.h>
 #include <asm/cputime.h>
 #include <linux/input.h>
+#include "symsearch.h"
+
+SYMSEARCH_DECLARE_FUNCTION_STATIC(int, sched_setscheduler_nocheck_k, struct task_struct *, int policy, const struct sched_param *);
 
 static int active_count;
 
@@ -1496,6 +1499,7 @@ static int __init cpufreq_intelliactive_init(void)
 	unsigned int i;
 	struct cpufreq_interactive_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
+	SYMSEARCH_BIND_FUNCTION_TO(cpufreq_intelliactive, sched_setscheduler_nocheck, sched_setscheduler_nocheck_k);
 
 	/* Initalize per-cpu timers */
 	for_each_possible_cpu(i) {
@@ -1519,7 +1523,7 @@ static int __init cpufreq_intelliactive_init(void)
 	if (IS_ERR(speedchange_task))
 		return PTR_ERR(speedchange_task);
 
-	sched_setscheduler_nocheck(speedchange_task, SCHED_FIFO, &param);
+	sched_setscheduler_nocheck_k(speedchange_task, SCHED_FIFO, &param);
 	get_task_struct(speedchange_task);
 
 	/* NB: wake up so the thread does not look hung to the freezer */

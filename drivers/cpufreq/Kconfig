@@ -138,6 +138,12 @@ config CPU_FREQ_DEFAULT_GOV_INTELLIDEMAND
 
 endchoice
 
+config CPU_FREQ_DEFAULT_GOV_SMARTASSV2
+	bool "smartass2"
+	select CPU_FREQ_GOV_SMARTASSV2
+	help
+		Use the CPUFreq governor 'smartassV2' as default.
+
 config CPU_FREQ_DEFAULT_GOV_LAGFREE
         bool "lagfree"
         select CPU_FREQ_GOV_LAGFREE
@@ -157,6 +163,13 @@ config CPU_FREQ_GOV_LIONHEART
 	 Use the CPUFreq governor 'lionheart' as default.
 
 	  If in doubt, say N.
+
+config CPU_FREQ_GOV_SMARTASSV2
+	tristate "'smartassV2' cpufreq governor"
+	depends on CPU_FREQ
+	help
+		'smartassV2' - a "smart" governor
+		If in doubt, say N.
 
 config CPU_FREQ_GOV_LAGFREE
         tristate "'lagfree' cpufreq governor"
