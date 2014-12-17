@@ -54,9 +54,13 @@
 #include <linux/kernel_stat.h>
 #include <asm/cputime.h>
 #include <linux/module.h>
+#include "symsearch.h"
 
 #define CREATE_TRACE_POINTS
 #include <trace/events/cpufreq_ondemandplus.h>
+
+SYMSEARCH_DECLARE_FUNCTION_STATIC(int, sched_setscheduler_nocheck_k, struct task_struct *, int policy, const struct sched_param *);
+SYMSEARCH_DECLARE_FUNCTION_STATIC(int, wake_up_process_k, struct task_struct *tsk);
 
 static atomic_t active_count = ATOMIC_INIT(0);
 
@@ -381,7 +385,7 @@ static void cpufreq_ondemandplus_timer(unsigned long data)
 	spin_lock_irqsave(&speedchange_cpumask_lock, flags);
 	cpumask_set_cpu(data, &speedchange_cpumask);
 	spin_unlock_irqrestore(&speedchange_cpumask_lock, flags);
-	wake_up_process(speedchange_task);
+	wake_up_process_k(speedchange_task);
 
 rearm_if_notmax:
 	/*
@@ -924,6 +928,9 @@ static int __init cpufreq_ondemandplus_init(void)
 	struct cpufreq_ondemandplus_cpuinfo *pcpu;
 	struct sched_param param = { .sched_priority = MAX_RT_PRIO-1 };
 
+	SYMSEARCH_BIND_FUNCTION_TO(cpufreq_ondemandplus, sched_setscheduler_nocheck, sched_setscheduler_nocheck_k);
+	SYMSEARCH_BIND_FUNCTION_TO(cpufreq_ondemandplus, wake_up_process, wake_up_process_k);
+
 	timer_rate = DEFAULT_TIMER_RATE;
 	up_threshold = DEFAULT_UP_THRESHOLD;
 	down_differential = DEFAULT_DOWN_DIFFERENTIAL;
@@ -951,11 +958,11 @@ static int __init cpufreq_ondemandplus_init(void)
 	if (IS_ERR(speedchange_task))
 		return PTR_ERR(speedchange_task);
 
-	sched_setscheduler_nocheck(speedchange_task, SCHED_FIFO, &param);
+	sched_setscheduler_nocheck_k(speedchange_task, SCHED_FIFO, &param);
 	get_task_struct(speedchange_task);
 
 	/* NB: wake up so the thread does not look hung to the freezer */
-	wake_up_process(speedchange_task);
+	wake_up_process_k(speedchange_task);
 
 	return cpufreq_register_governor(&cpufreq_gov_ondemandplus);
 
